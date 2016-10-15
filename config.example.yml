@@ -2,3 +2,6 @@
 Discourse_API_URL: https://example.org
 Discourse_API_username: syncBot
 Discourse_API_key: TBD
+MySQL_database: x5dat
+MySQL_username: TBD
+MySQL_password: TBD
