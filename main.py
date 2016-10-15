@@ -32,6 +32,9 @@ def main():
         if len(net_group_name) < 3:
             print(str(net_group_name) + "'s name is too short for Discourse")
             continue
+        elif len(net_group_name) > 20:
+            print(str(net_group_name) + "'s name is too long for Discourse")
+            continue
         if discourse_groups.get(net_group_name, None) is None:
             new_group = client.create_group(net_group_name, "")
             group_id = new_group.get('basic_group').get('id')
