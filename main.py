@@ -1,4 +1,8 @@
+#!/usr/bin/env python3
+# *-* coding: utf-8 *-*
 from pydiscourse import DiscourseClient
+from pydiscourse.exceptions import DiscourseClientError
+from extract_Xnet_data import extract
 import yaml
 
 with open("config.yml") as conf_f:
@@ -7,31 +11,43 @@ with open("config.yml") as conf_f:
     USERNAME = conf['Discourse_API_username']
     API_KEY = conf['Discourse_API_key']
 
+list_net_groups = extract()
+
 def main():
     client = DiscourseClient(URL, USERNAME, API_KEY)
 
-    # get list of .net groups
-    lis_net_groups = []
     list_groups = client.groups()
+    discourse_groups = {group['name'] : group for group in list_groups}
 
-    for group in list_net_groups:
-        if group not in list_groups:
-            client.create_group(group.name, group.title, visible)
-            # get group_id
-            sync_group(group_id, client)
+    for net_group_name in list_net_groups.keys():
+        if discourse_groups.get(net_group_name, None) is None:
+            new_group = client.create_group(net_group_name, "")
+            group_id = new_group.get('basic_group').get('id')
+            sync_group(group_id, net_group_name, client)
         else:
-            sync_group(group.id, client)
+            sync_group(discourse_groups[net_group_name].get('id'), net_group_name, client)
 
-def sync_group(group_id, client):
-    old_members = []
-    # old_members =  group_id members
-    # net_members = get_list_ne_members()
-    # l = []
-    for member in net_members:
-        if member in old_members:
-            del old_members[member]
-        else:
-            client.add_member_to_group(group_id, member.username)
-        l.push(member)
-    for member in old_members:
-        client.delete_group_member(group_id, member.id)
+def sync_group(group_id, group_name, client):
+    old_members = client.group_members(group_name)
+    discourse_members = [member['id'] for member in old_members]
+    net_members = list_net_groups[group_name]
+    l = []
+
+    if net_members is not None:
+        for member in net_members:
+            try:
+                member_id = client.by_external_id(member)['id']
+            except DiscourseClientError:
+                member_id = 0
+            if member_id != 0:
+                if member_id in discourse_members:
+                    discourse_members.remove(member_id)
+                else:
+                    member = client.add_user_to_group(group_id, member_id)
+                l.append(member_id)
+
+        for member_id in discourse_members:
+            client.delete_group_member(group_id, member_id)
+
+if "__name__" == "__main__":
+    main()

@@ -28,6 +28,7 @@ def extract():
         group_list[gname] = [x[0] for x in cursor.fetchall()]
     #Yaml everything and output it
     print(yaml.dump(group_list))
+    return group_list
 
 if __name__ == '__main__':
     extract()
