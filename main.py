@@ -38,7 +38,7 @@ def main():
         if discourse_groups.get(net_group_name, None) is None:
             new_group = client.create_group(net_group_name, "")
             group_id = new_group.get('basic_group').get('id')
-            sync_group(group_id, net_group_name)
+            sync_group(None, net_group_name)
         else:
             sync_group(discourse_groups[net_group_name].get('id'), net_group_name)
 
@@ -55,6 +55,8 @@ def sync_group(group_id, group_name):
                 if member_id in discourse_members:
                     discourse_members.remove(member_id)
                 else:
+                    if group_id is None:
+                        group_id = client.create_group(group_name, "").get('basic_group').get('id')
                     member = client.add_user_to_group(group_id, member_id)
                 l.append(member_id)
 
