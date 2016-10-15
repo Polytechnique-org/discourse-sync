@@ -20,10 +20,6 @@ for member in client.users():
     if c is not None:
         list_discourse_members.append(c.get('external_id'))
 
-
-def get_external_id(userid):
-    return client.user_all(userid).get('single_sign_on_record').get('external_id')
-
 def main():
     list_groups = client.groups()
     discourse_groups = {group['name'] : group for group in list_groups}
@@ -36,11 +32,12 @@ def main():
             print(str(net_group_name) + "'s name is too long for Discourse")
             continue
         if discourse_groups.get(net_group_name, None) is None:
-            new_group = client.create_group(net_group_name, "")
-            group_id = new_group.get('basic_group').get('id')
             sync_group(None, net_group_name)
         else:
-            sync_group(discourse_groups[net_group_name].get('id'), net_group_name)
+            if discourse_groups[net_group_name].get('id') is None:
+                print("Problem in group {0}.".format(net_group_name))
+            else:
+                sync_group(discourse_groups[net_group_name].get('id'), net_group_name)
 
 def sync_group(group_id, group_name):
     old_members = client.group_members(group_name)
