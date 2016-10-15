@@ -20,6 +20,9 @@ def main():
     discourse_groups = {group['name'] : group for group in list_groups}
 
     for net_group_name in list_net_groups.keys():
+        if len(net_group_name) < 3:
+            print(str(net_group_name) + "'s name is too short for Discourse")
+            continue
         if discourse_groups.get(net_group_name, None) is None:
             new_group = client.create_group(net_group_name, "")
             group_id = new_group.get('basic_group').get('id')
@@ -49,5 +52,5 @@ def sync_group(group_id, group_name, client):
         for member_id in discourse_members:
             client.delete_group_member(group_id, member_id)
 
-if "__name__" == "__main__":
+if __name__ == "__main__":
     main()

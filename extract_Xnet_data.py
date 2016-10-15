@@ -14,7 +14,7 @@ def extract():
     db = MySQLdb.connect(host='localhost', user=USERNAME, passwd=PASSWORD, db=DATABASE)
     cursor = db.cursor()
     #Get list of Groups
-    cursor.execute("SELECT id,nom FROM `groups`")
+    cursor.execute("SELECT id,diminutif FROM `groups`")
     db.commit()
     results = cursor.fetchall()
     groupNameFromId = {}
@@ -26,8 +26,6 @@ def extract():
         cursor.execute("SELECT accounts.hruid FROM group_members INNER JOIN accounts ON accounts.uid = group_members.uid WHERE group_members.asso_id=" + str(gid));
         db.commit()
         group_list[gname] = [x[0] for x in cursor.fetchall()]
-    #Yaml everything and output it
-    print(yaml.dump(group_list))
     return group_list
 
 if __name__ == '__main__':
