@@ -8,24 +8,27 @@ def main():
     client = DiscourseClient(URL, USERNAME, API_KEY)
 
     # get list of .net groups
+    lis_net_groups = []
+    list_groups = client.groups()
 
-    # if group does not exist
-        # create it
-        # get group_id
-        # sync_group(group_id)
-    # if group already exists
-        # get group_id
-        # sync_group(group_id)
+    for group in list_net_groups:
+        if group not in list_groups:
+            client.create_group(group.name, group.title, visible)
+            # get group_id
+            sync_group(group_id, client)
+        else:
+            sync_group(group.id, client)
 
-def sync_group(group_id):
-    # old_l =  group_id members
+def sync_group(group_id, client):
+    old_members = []
+    # old_members =  group_id members
+    # net_members = get_list_ne_members()
     # l = []
-    # for each member of the .net group
-        # if !old_l.contains(member)
-            # client.add_member_to_group(group_id, username)
-        # else 
-            # old_l.delete(member)
-        # l.push(member)
-    # for member in old_l:
-        # client.delete_group_member(group_id, user_id)
-
+    for member in net_members:
+        if member in old_members:
+            del old_members[member]
+        else:
+            client.add_member_to_group(group_id, member.username)
+        l.push(member)
+    for member in old_members:
+        client.delete_group_member(group_id, member.id)
