@@ -13,7 +13,13 @@ with open("config.yml") as conf_f:
 
 client = DiscourseClient(URL, USERNAME, API_KEY)
 list_net_groups = extract()
-list_discourse_members = map(get_external_id, [member['id'] for member in client.users()])
+list_discourse_members = []
+
+for member in client.users():
+    c = client.user_all(member['id']).get('single_sign_on_record', None)
+    if c is not None:
+        list_discourse_members.append(c.get('external_id'))
+
 
 def get_external_id(userid):
     return client.user_all(userid).get('single_sign_on_record').get('external_id')
