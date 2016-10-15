@@ -1,8 +1,11 @@
 from pydiscourse import DiscourseClient
+import yaml
 
-URL = "https://forum.polytechnique.org"
-USERNAME = ""
-API_KEY = ""
+with open("config.yml") as conf_f:
+    conf = yaml.load(conf_f)
+    URL = conf['Discourse_API_URL']
+    USERNAME = conf['Discourse_API_username']
+    API_KEY = conf['Discourse_API_key']
 
 def main():
     client = DiscourseClient(URL, USERNAME, API_KEY)
