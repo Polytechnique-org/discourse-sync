@@ -1,0 +1,10 @@
+---
+Group1:
+    - user1
+    - user2
+Group2:
+    - user2
+    - user3
+Group3:
+Group4:
+    - user1
