@@ -4,6 +4,7 @@ from pydiscourse import DiscourseClient
 from pydiscourse.exceptions import DiscourseClientError
 from extract_Xnet_data import extract_all_groups, extract_groups_from_hruid
 import yaml
+import time
 
 with open("config.yml") as conf_f:
     conf = yaml.load(conf_f)
@@ -126,7 +127,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--all', action='store_true', help='Synchronize the whole database with Discourse')
     parser.add_argument('--user', help='Synchronize one user')
+    parser.add_argument('--sleep', help='Adds a delay before acting')
     args = parser.parse_args()
+    if args.sleep:
+        time.sleep(int(args.sleep))
     if args.all:
         sync_all_groups()
     else:
