@@ -25,25 +25,26 @@ def main():
     discourse_groups = {group['name'] : group for group in list_groups}
 
     for net_group_name in list_net_groups.keys():
-        if len(net_group_name) < 3:
-            print(str(net_group_name) + "'s name is too short for Discourse")
-            continue
-        elif len(net_group_name) > 20:
-            print(str(net_group_name) + "'s name is too long for Discourse")
-            continue
-        if discourse_groups.get(net_group_name, None) is None:
-            sync_group(None, net_group_name)
+        d_group_name = net_group_name
+        if len(d_group_name) < 3:
+            #this name is too short for discourse, let's prepend _ to it
+            d_group_name = '_'*(len(d_group_name)-3) + d_group_name
+        elif len(d_group_name) > 20:
+            #this name is too long for discourse, let's cut it
+            d_group_name = net_group_name[:20]
+        if discourse_groups.get(d_group_name, None) is None:
+            sync_group(None, net_group_name, d_group_name)
         else:
-            if discourse_groups[net_group_name].get('id') is None:
+            if discourse_groups[d_group_name].get('id') is None:
                 print("Problem in group {0}.".format(net_group_name))
             else:
-                sync_group(discourse_groups[net_group_name].get('id'), net_group_name)
+                sync_group(discourse_groups[d_group_name].get('id'), net_group_name, d_group_name)
 
-def sync_group(group_id, group_name):
+def sync_group(group_id, group_name, d_group_name):
     if group_id is None:
         old_members = []
     else:
-        old_members = client.group_members(group_name)
+        old_members = client.group_members(d_group_name)
     discourse_members = [member['id'] for member in old_members]
     net_members = list_net_groups[group_name]
     l = []
@@ -56,7 +57,7 @@ def sync_group(group_id, group_name):
                     discourse_members.remove(member_id)
                 else:
                     if group_id is None:
-                        group_id = client.create_group(group_name, "").get('basic_group').get('id')
+                        group_id = client.create_group(d_group_name, "").get('basic_group').get('id')
                         print("Created group '{0}'".format(group_name))
                     member = client.add_user_to_group(group_id, member_id)
                 l.append(member_id)
