@@ -48,6 +48,7 @@ def sync_group(group_id, group_name, d_group_name):
     discourse_members = [member['id'] for member in old_members]
     net_members = list_net_groups[group_name]
     l = []
+    empty = True
 
     if net_members is not None:
         for member in net_members:
@@ -55,15 +56,21 @@ def sync_group(group_id, group_name, d_group_name):
                 member_id = all_discourse_members[member]
                 if member_id in discourse_members:
                     discourse_members.remove(member_id)
+                    empty = False
                 else:
                     if group_id is None:
                         group_id = client.create_group(d_group_name, "").get('basic_group').get('id')
                         print("Created group '{0}'".format(group_name))
                     member = client.add_user_to_group(group_id, member_id)
+                    empty = False
                 l.append(member_id)
 
         for member_id in discourse_members:
             client.delete_group_member(group_id, member_id)
+
+    if empty and group_id is not None:
+        client.delete_group(group_id)
+        print("Deleted empty group {0}.".format(group_name))
 
 if __name__ == "__main__":
     main()
