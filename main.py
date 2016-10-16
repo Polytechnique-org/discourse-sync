@@ -18,7 +18,7 @@ all_discourse_members = {}
 for member in client.users():
     c = client.user_all(member['id']).get('single_sign_on_record', None)
     if c is not None:
-        all_discourse_members[c.get('external_id')] = c.get('id')
+        all_discourse_members[c['external_id']] = c['user_id']
 
 def main():
     list_groups = client.groups()
@@ -28,11 +28,11 @@ def main():
         d_group_name = net_group_name
         if len(d_group_name) < 3:
             #this name is too short for discourse, let's prepend _ to it
-            d_group_name = '_'*(len(d_group_name)-3) + d_group_name
+            d_group_name = '_'*(3-len(d_group_name)) + d_group_name
         elif len(d_group_name) > 20:
             #this name is too long for discourse, let's cut it
             d_group_name = net_group_name[:20]
-        if discourse_groups.get(d_group_name, None) is None:
+        if d_group_name not in discourse_groups:
             sync_group(None, net_group_name, d_group_name)
         else:
             if discourse_groups[d_group_name].get('id') is None:
