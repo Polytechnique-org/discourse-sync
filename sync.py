@@ -51,16 +51,21 @@ def sync_all_groups():
     discourse_groups = getAllDiscourseGroups()
 
     #Sync each group
+    adds = 0
+    dels = 0
     for net_group_name in list_net_groups.keys():
         net_members = list_net_groups[net_group_name]
         d_group_name = discourseName(net_group_name)
         if d_group_name not in discourse_groups:
-            sync_group(None, net_group_name, d_group_name, net_members, all_discourse_members)
+            [thisadd, thisdel] = sync_group(None, net_group_name, d_group_name, net_members, all_discourse_members)
         else:
             if discourse_groups[d_group_name].get('id') is None:
                 print("Problem in group {0}.".format(net_group_name))
             else:
-                sync_group(discourse_groups[d_group_name].get('id'), net_group_name, d_group_name, net_members, all_discourse_members)
+                [thisadd, thisdel] = sync_group(discourse_groups[d_group_name].get('id'), net_group_name, d_group_name, net_members, all_discourse_members)
+        adds += thisadd
+        dels += thisdel
+    return adds, dels
 
 def createGroup(name):
     print("Creating group '{0}'".format(name))
@@ -74,6 +79,8 @@ def sync_group(group_id, group_name, d_group_name, net_members, all_discourse_me
     discourse_members = [member['id'] for member in old_members]
     l = []
     empty = True
+    adds = 0
+    dels = 0
 
     if net_members is not None:
         for member in net_members:
@@ -86,15 +93,18 @@ def sync_group(group_id, group_name, d_group_name, net_members, all_discourse_me
                     if group_id is None:
                         group_id = createGroup(d_group_name)
                     member = client.add_user_to_group(group_id, member_id)
+                    adds += 1
                     empty = False
                 l.append(member_id)
 
         for member_id in discourse_members:
             client.delete_group_member(group_id, member_id)
+            dels += 1
 
     if empty and group_id is not None:
         client.delete_group(group_id)
         print("Deleted empty group {0}.".format(group_name))
+    return adds, dels
 
 def sync_user(hruid):
     """
@@ -104,7 +114,7 @@ def sync_user(hruid):
     Args:
         hruid: hruid in X.net of the user
     Returns:
-        None
+		count_adds: the number of group additions for this user
 
     """
     net_groups = extract_groups_from_hruid(hruid)
@@ -112,15 +122,18 @@ def sync_user(hruid):
     user_data = client.user_by_external_id(hruid)
     uid = user_data['id']
     d_user_groups = {g['name']:g['id'] for g in user_data['groups']}
+    count_adds = 0
     for net_group_name in net_groups:
         d_group_name = discourseName(net_group_name)
         if d_group_name in d_user_groups:
             continue
         if d_group_name in d_groups:
-            group_di = d_groups[d_group_name]
+            group_id = d_groups[d_group_name]['id']
         else:
             group_id =  createGroup(d_group_name) 
         client.add_user_to_group(group_id, uid)
+        count_adds += 1
+    return count_adds
 
 if __name__ == "__main__":
     import argparse
@@ -132,10 +145,12 @@ if __name__ == "__main__":
     if args.sleep:
         time.sleep(int(args.sleep))
     if args.all:
-        sync_all_groups()
+        [adds, dels] = sync_all_groups()
+        print('Sync performed {} group member additions and {} group member deletions'.format(adds,dels))
     else:
         if args.user:
-            sync_user(args.user)
+            num = sync_user(args.user)
+            print('User {} has been added to {} groups.'.format(args.user, num))
         else:
             from sys import exit,stderr
             print('Error: nothing to do. Please provide an user or use --all', file=stderr)
